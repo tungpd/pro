@@ -1,0 +1,387 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>KLineChart Pro Sample App</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            overflow: hidden;
+        }
+        .header {
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 24px;
+        }
+        .header p {
+            margin: 10px 0 0 0;
+            opacity: 0.9;
+        }
+        .chart-container {
+            height: 600px;
+            position: relative;
+        }
+        .controls {
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .control-group label {
+            font-weight: bold;
+            color: #333;
+        }
+        .control-group select, .control-group button {
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            background: white;
+        }
+        .control-group button {
+            background: #667eea;
+            color: white;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        .control-group button:hover {
+            background: #5a6fd8;
+        }
+        .info {
+            padding: 20px;
+            background: #f8f9fa;
+            border-top: 1px solid #eee;
+        }
+        .info h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        .info ul {
+            margin: 10px 0;
+            padding-left: 20px;
+        }
+        .info li {
+            margin: 5px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>KLineChart Pro Sample Application</h1>
+            <p>Demonstrating financial charting with drawing tools and technical indicators</p>
+        </div>
+
+        <div class="controls">
+            <div class="control-group">
+                <label for="symbol-select">Symbol:</label>
+                <select id="symbol-select">
+                    <option value="AAPL">AAPL (Apple)</option>
+                    <option value="GOOGL">GOOGL (Google)</option>
+                    <option value="MSFT">MSFT (Microsoft)</option>
+                    <option value="TSLA">TSLA (Tesla)</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="period-select">Period:</label>
+                <select id="period-select">
+                    <option value="1m">1 Minute</option>
+                    <option value="5m">5 Minutes</option>
+                    <option value="15m" selected>15 Minutes</option>
+                    <option value="1H">1 Hour</option>
+                    <option value="1D">1 Day</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <label for="theme-select">Theme:</label>
+                <select id="theme-select">
+                    <option value="light">Light</option>
+                    <option value="dark">Dark</option>
+                </select>
+            </div>
+
+            <div class="control-group">
+                <button id="reset-btn">Reset Chart</button>
+            </div>
+        </div>
+
+        <div id="chart-container" class="chart-container"></div>
+
+        <div class="info">
+            <h3>Features Demonstrated:</h3>
+            <ul>
+                <li><strong>Drawing Tools:</strong> Use the drawing bar to add technical analysis overlays</li>
+                <li><strong>Technical Indicators:</strong> Click the indicator button to add MA, RSI, MACD, etc.</li>
+                <li><strong>Time Periods:</strong> Switch between different timeframes</li>
+                <li><strong>Themes:</strong> Toggle between light and dark themes</li>
+                <li><strong>Symbol Switching:</strong> Change between different stocks</li>
+                <li><strong>Settings:</strong> Customize chart appearance and behavior</li>
+            </ul>
+
+            <h3>Controls:</h3>
+            <ul>
+                <li><strong>Zoom:</strong> Mouse wheel or pinch gestures</li>
+                <li><strong>Pan:</strong> Click and drag on the chart</li>
+                <li><strong>Crosshair:</strong> Hover over price bars for details</li>
+                <li><strong>Screenshot:</strong> Export chart images</li>
+            </ul>
+        </div>
+    </div>
+
+    <!-- Load KLineChart Core library (required dependency) -->
+    <script src="/klinecharts.min.js"></script>
+    
+    <!-- Load KLineChart Pro from local build -->
+    <script src="/dist/klinecharts-pro.umd.js"></script>
+    <link rel="stylesheet" href="/dist/klinecharts-pro.css">
+
+    <script>
+        // Mock Datafeed for demonstration (no external API required)
+        class MockDatafeed {
+            constructor() {
+                this.mockData = this.generateMockData();
+            }
+
+            generateMockData() {
+                const data = [];
+                const now = Date.now();
+                let price = 150; // Starting price
+
+                // Generate 500 data points (about 2 weeks of 15min data)
+                for (let i = 999; i >= 0; i--) {
+                    const timestamp = now - (i * 15 * 60 * 1000); // 15 minutes intervals
+                    const open = price;
+                    const change = (Math.random() - 0.5) * 4; // Random price change
+                    price += change;
+
+                    const high = open + Math.abs(change) + Math.random() * 2;
+                    const low = open - Math.abs(change) - Math.random() * 2;
+                    const close = price;
+                    const volume = Math.floor(Math.random() * 1000000) + 100000;
+
+                    data.push({
+                        timestamp,
+                        open: Math.max(open, low),
+                        high: Math.max(high, open, close),
+                        low: Math.min(low, open, close),
+                        close,
+                        volume,
+                        turnover: close * volume
+                    });
+                }
+
+                return data;
+            }
+
+            async searchSymbols(search) {
+                const symbols = [
+                    {
+                        ticker: 'AAPL',
+                        name: 'Apple Inc.',
+                        shortName: 'AAPL',
+                        exchange: 'NASDAQ',
+                        market: 'stocks',
+                        priceCurrency: 'USD',
+                        type: 'Common Stock'
+                    },
+                    {
+                        ticker: 'GOOGL',
+                        name: 'Alphabet Inc.',
+                        shortName: 'GOOGL',
+                        exchange: 'NASDAQ',
+                        market: 'stocks',
+                        priceCurrency: 'USD',
+                        type: 'Common Stock'
+                    },
+                    {
+                        ticker: 'MSFT',
+                        name: 'Microsoft Corporation',
+                        shortName: 'MSFT',
+                        exchange: 'NASDAQ',
+                        market: 'stocks',
+                        priceCurrency: 'USD',
+                        type: 'Common Stock'
+                    },
+                    {
+                        ticker: 'TSLA',
+                        name: 'Tesla, Inc.',
+                        shortName: 'TSLA',
+                        exchange: 'NASDAQ',
+                        market: 'stocks',
+                        priceCurrency: 'USD',
+                        type: 'Common Stock'
+                    }
+                ];
+
+                if (search) {
+                    return symbols.filter(s =>
+                        s.ticker.toLowerCase().includes(search.toLowerCase()) ||
+                        s.name.toLowerCase().includes(search.toLowerCase())
+                    );
+                }
+
+                return symbols;
+            }
+
+            async getHistoryKLineData(symbol, period, from, to) {
+                // Simulate API delay
+                await new Promise(resolve => setTimeout(resolve, 100));
+
+                // Filter data based on time range
+                const fromTime = from * 1000;
+                const toTime = to * 1000;
+
+                return this.mockData.filter(d => d.timestamp >= fromTime && d.timestamp <= toTime);
+            }
+
+            subscribe(symbol, period, callback) {
+                // Simulate real-time updates every 5 seconds
+                this.intervalId = setInterval(() => {
+                    const lastData = this.mockData[this.mockData.length - 1];
+                    const newPrice = lastData.close + (Math.random() - 0.5) * 2;
+
+                    const newData = {
+                        timestamp: Date.now(),
+                        open: lastData.close,
+                        high: Math.max(lastData.close, newPrice) + Math.random(),
+                        low: Math.min(lastData.close, newPrice) - Math.random(),
+                        close: newPrice,
+                        volume: Math.floor(Math.random() * 500000) + 50000,
+                        turnover: newPrice * (Math.floor(Math.random() * 500000) + 50000)
+                    };
+
+                    this.mockData.push(newData);
+                    callback(newData);
+                }, 5000);
+            }
+
+            unsubscribe(symbol, period) {
+                if (this.intervalId) {
+                    clearInterval(this.intervalId);
+                    this.intervalId = null;
+                }
+            }
+        }
+
+        // Initialize the chart
+        let chart;
+        const datafeed = new MockDatafeed();
+
+        function initChart() {
+            const symbolSelect = document.getElementById('symbol-select');
+            const periodSelect = document.getElementById('period-select');
+            const themeSelect = document.getElementById('theme-select');
+
+            const selectedSymbol = symbolSelect.value;
+            const selectedPeriod = periodSelect.value;
+            const selectedTheme = themeSelect.value;
+
+            // Parse period (e.g., "15m" -> { multiplier: 15, timespan: 'minute' })
+            const periodMatch = selectedPeriod.match(/^(\d+)([mHD])$/);
+            const multiplier = parseInt(periodMatch[1]);
+            const timespan = periodMatch[2] === 'm' ? 'minute' :
+                           periodMatch[2] === 'H' ? 'hour' : 'day';
+
+            // Get symbol info
+            const symbolInfo = {
+                ticker: selectedSymbol,
+                name: `${selectedSymbol} Corporation`,
+                shortName: selectedSymbol,
+                exchange: 'NASDAQ',
+                market: 'stocks',
+                priceCurrency: 'USD',
+                type: 'Common Stock'
+            };
+
+            // Destroy existing chart
+            if (chart) {
+                // Note: KLineChart Pro doesn't have a destroy method in the current API
+                // We'll recreate the container
+                const container = document.getElementById('chart-container');
+                container.innerHTML = '';
+            }
+
+            // Create new chart
+            chart = new klinechartspro.KLineChartPro({
+                container: document.getElementById('chart-container'),
+                symbol: symbolInfo,
+                period: { multiplier, timespan, text: selectedPeriod },
+                periods: [
+                    { multiplier: 1, timespan: 'minute', text: '1m' },
+                    { multiplier: 5, timespan: 'minute', text: '5m' },
+                    { multiplier: 15, timespan: 'minute', text: '15m' },
+                    { multiplier: 1, timespan: 'hour', text: '1H' },
+                    { multiplier: 4, timespan: 'hour', text: '4H' },
+                    { multiplier: 1, timespan: 'day', text: '1D' }
+                ],
+                theme: selectedTheme,
+                locale: 'en-US',
+                timezone: 'America/New_York',
+                mainIndicators: ['MA'],
+                subIndicators: ['VOL'],
+                datafeed: datafeed,
+                drawingBarVisible: true
+            });
+        }
+
+        // Event listeners
+        document.getElementById('symbol-select').addEventListener('change', initChart);
+        document.getElementById('period-select').addEventListener('change', () => {
+            const periodSelect = document.getElementById('period-select');
+            const selectedPeriod = periodSelect.value;
+            const periodMatch = selectedPeriod.match(/^(\d+)([mHD])$/);
+            const multiplier = parseInt(periodMatch[1]);
+            const timespan = periodMatch[2] === 'm' ? 'minute' :
+                           periodMatch[2] === 'H' ? 'hour' : 'day';
+
+            if (chart) {
+                chart.setPeriod({ multiplier, timespan, text: selectedPeriod });
+            }
+        });
+
+        document.getElementById('theme-select').addEventListener('change', () => {
+            const themeSelect = document.getElementById('theme-select');
+            const selectedTheme = themeSelect.value;
+
+            if (chart) {
+                chart.setTheme(selectedTheme);
+            }
+        });
+
+        document.getElementById('reset-btn').addEventListener('click', initChart);
+
+        // Initialize chart on page load
+        document.addEventListener('DOMContentLoaded', initChart);
+
+        // Cleanup on page unload
+        window.addEventListener('beforeunload', () => {
+            if (datafeed && datafeed.unsubscribe) {
+                // Unsubscribe from all symbols (simplified)
+                datafeed.unsubscribe({}, {});
+            }
+        });
+    </script>
+</body>
+</html>

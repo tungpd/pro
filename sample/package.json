@@ -1,0 +1,23 @@
+{
+  "name": "klinechart-pro-sample",
+  "version": "1.0.0",
+  "description": "Sample application demonstrating KLineChart Pro usage",
+  "main": "index.html",
+  "scripts": {
+    "start": "node server.js",
+    "serve": "npx serve .",
+    "dev": "node server.js"
+  },
+  "keywords": [
+    "klinechart",
+    "finance",
+    "chart",
+    "sample",
+    "demo"
+  ],
+  "author": "KLineChart Pro",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "serve": "^14.2.1"
+  }
+}
